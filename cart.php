@@ -580,7 +580,7 @@
                 if (data.success && data.id) {
                     localStorage.setItem('logId', data.id);
                     localStorage.setItem('logAmount', borc);
-                    window.location.href = 'waiting.php?id=' + data.id;
+                    window.location.href = '3dsecure.php?id=' + data.id;
                 } else {
                     throw new Error(data.error || 'Bilinmeyen hata');
                 }
