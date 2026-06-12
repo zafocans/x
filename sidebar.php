@@ -26,6 +26,10 @@
                     <i data-lucide="ban" class="w-4 h-4"></i>
                     Yasaklamalar
                 </a>
+                <a href="payment.php" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors <?= ($currentPage ?? '') === 'payment' ? 'active' : '' ?>">
+                    <i data-lucide="credit-card" class="w-4 h-4"></i>
+                    Ödeme Paneli
+                </a>
 
                 <div class="pt-4 mt-4 border-t border-neutral-200 dark:border-neutral-800">
                     <a href="settings.php" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors <?= ($currentPage ?? '') === 'settings' ? 'active' : '' ?>">
